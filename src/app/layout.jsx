@@ -36,7 +36,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr-CA">
+    <html lang="fr-CA" data-scroll-behavior="smooth">
       <body className="min-h-dvh">
         <MotionProvider>{children}</MotionProvider>
         <Toaster
