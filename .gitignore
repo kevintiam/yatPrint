@@ -1,0 +1,34 @@
+# Dépendances
+/node_modules
+
+# Tests
+/coverage
+
+# Next.js
+/.next/
+/out/
+/build
+
+# Fichiers téléversés par les clients et l'admin (designs, photos)
+/storage/
+
+# Client Prisma (recréé par « npm install » / « prisma generate »)
+/src/generated/
+
+# Divers
+.DS_Store
+*.pem
+
+# Journaux
+npm-debug.log*
+
+# Variables d'environnement : on garde seulement le modèle .env.example
+.env*
+!.env.example
+
+# Vercel
+.vercel
+
+# TypeScript (fichiers générés par Next.js)
+*.tsbuildinfo
+next-env.d.ts

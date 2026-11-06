@@ -1,0 +1,339 @@
+// ------------------------------------------------------------------
+// Schéma de la base de données PostgreSQL de Yat'Print (Prisma).
+//
+// Chaque « model » devient une table. Les relations (@relation) relient
+// les tables entre elles : une commande a des lignes, un produit a des couleurs...
+//
+// Après une modification de ce fichier :
+//   npm run db:migrate   (crée une migration et met la base à jour)
+// ------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Listes de valeurs fixes (enums) ----------
+// Elles correspondent aux clés de src/config/statuses.js et src/config/shipping.js
+
+enum ProductLine {
+  service // article à personnaliser (atelier)
+  collection // article de la marque Yat'Print
+}
+
+enum DeliveryMethod {
+  shipping
+  pickup
+}
+
+enum PaymentMode {
+  stripe
+  demo
+}
+
+enum OrderStatus {
+  pending_payment
+  paid
+  in_production
+  ready
+  shipped
+  completed
+  cancelled
+}
+
+enum QuoteStatus {
+  new
+  contacted
+  quoted
+  won
+  closed
+}
+
+enum MentorshipStatus {
+  new
+  confirmed
+  declined
+  completed
+}
+
+enum MessageStatus {
+  new
+  read
+  archived
+}
+
+enum FilePurpose {
+  design // design envoyé par un client (privé)
+  product // photo de produit (publique)
+  gallery // photo de la galerie (publique)
+}
+
+// ---------- Catalogue ----------
+
+model Product {
+  id               String      @id @default(cuid())
+  name             String      @db.VarChar(120)
+  slug             String      @unique // partie de l'adresse web
+  line             ProductLine
+  category         String // clé de src/config/catalog.js (tshirt, hoodie, mug...)
+  shortDescription String      @default("")
+  description      String      @default("")
+  priceCents       Int // prix en cents : 3800 = 38,00 $
+  images           String[] // la première est la photo principale
+  sizes            String[] // ex. ["S", "M", "L"]
+  allowCustomColor Boolean     @default(false) // « Choisir ma couleur »
+  isActive         Boolean     @default(true) // false = caché du site
+  isFeatured       Boolean     @default(false)
+  sortOrder        Int         @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  colors     ProductColor[]
+  materials  ProductMaterial[]
+  orderItems OrderItem[]
+
+  @@index([line, isActive, sortOrder])
+  @@map("products")
+}
+
+model ProductColor {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String  @db.VarChar(40)
+  hex       String  @db.VarChar(9)
+  image     String  @default("")
+  position  Int     @default(0) // ordre d'affichage
+
+  @@index([productId])
+  @@map("product_colors")
+}
+
+model ProductMaterial {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  key       String  @db.VarChar(30) // ex. "wood"
+  name      String  @db.VarChar(40) // ex. "Bois"
+  image     String  @default("")
+  position  Int     @default(0)
+
+  @@index([productId])
+  @@map("product_materials")
+}
+
+// ---------- Commandes ----------
+
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique // ex. « YP-261105-K7QF »
+
+  customerFirstName String
+  customerLastName  String
+  customerEmail     String
+  customerPhone     String @default("")
+
+  deliveryMethod    DeliveryMethod
+  deliveryProvince  String @db.VarChar(2) // sert au calcul des taxes
+  addressLine1      String @default("")
+  addressLine2      String @default("")
+  addressCity       String @default("")
+  addressPostalCode String @default("")
+
+  subtotalCents Int
+  shippingCents Int
+  taxCents      Int
+  totalCents    Int
+
+  status          OrderStatus @default(pending_payment)
+  paymentMode     PaymentMode @default(stripe)
+  stripeSessionId String?     @unique
+  paidAt          DateTime?
+  customerNote    String      @default("")
+  adminNote       String      @default("") // jamais montrée au client
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  items         OrderItem[]
+  taxLines      OrderTaxLine[]
+  statusHistory OrderStatusEvent[]
+
+  @@index([status, createdAt])
+  @@index([customerEmail])
+  @@map("orders")
+}
+
+// Une ligne de commande garde une COPIE du nom et du prix au moment de l'achat
+model OrderItem {
+  id             String      @id @default(cuid())
+  orderId        String
+  order          Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String? // vide si le produit a été supprimé depuis
+  product        Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName    String
+  productSlug    String      @default("")
+  line           ProductLine
+  category       String      @default("")
+  image          String      @default("")
+  unitPriceCents Int
+  quantity       Int
+  color          String      @default("")
+  customColor    String      @default("")
+  size           String      @default("")
+  material       String      @default("")
+  placement      String      @default("")
+  printText      String      @default("")
+  instructions   String      @default("")
+  designFileId   String?
+  designFile     UploadedFile? @relation(fields: [designFileId], references: [id], onDelete: SetNull)
+  designFileName String      @default("")
+  position       Int         @default(0)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model OrderTaxLine {
+  id          String @id @default(cuid())
+  orderId     String
+  order       Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  label       String // ex. "TVH"
+  rate        Float // ex. 0.13
+  amountCents Int
+  position    Int    @default(0)
+
+  @@index([orderId])
+  @@map("order_tax_lines")
+}
+
+// Historique des statuts (frise de suivi du client)
+model OrderStatusEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String      @default("") // précision visible par le client
+  changedAt DateTime    @default(now())
+
+  @@index([orderId])
+  @@map("order_status_events")
+}
+
+// ---------- Demandes reçues ----------
+
+model QuoteRequest {
+  id        String      @id @default(cuid())
+  firstName String
+  lastName  String
+  phone     String
+  email     String      @default("")
+  company   String      @default("")
+  comment   String
+  status    QuoteStatus @default(new)
+  adminNote String      @default("")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([status, createdAt])
+  @@map("quote_requests")
+}
+
+model MentorshipRequest {
+  id             String           @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String
+  phone          String           @default("")
+  topic          String // clé de src/config/options.js
+  level          String
+  format         String
+  preferredDates String
+  message        String           @default("")
+  status         MentorshipStatus @default(new)
+  confirmedDate  String           @default("")
+  adminNote      String           @default("")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@map("mentorship_requests")
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String        @default("")
+  subject   String
+  message   String
+  status    MessageStatus @default(new)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status, createdAt])
+  @@map("contact_messages")
+}
+
+// ---------- Galerie, fichiers, comptes et réglages ----------
+
+model GalleryItem {
+  id          String   @id @default(cuid())
+  title       String   @db.VarChar(80)
+  category    String // clé de src/config/options.js
+  imageUrl    String   @unique
+  description String   @default("")
+  sortOrder   Int      @default(0)
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isVisible, sortOrder])
+  @@map("gallery_items")
+}
+
+model UploadedFile {
+  id           String      @id @default(cuid())
+  originalName String
+  storedName   String      @unique // nom unique sur le disque
+  mimeType     String
+  sizeBytes    Int
+  purpose      FilePurpose
+  isPublic     Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+
+  orderItems OrderItem[]
+
+  @@map("uploaded_files")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String   @default("Admin")
+  passwordHash String // empreinte bcrypt, jamais le mot de passe en clair
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// Réglages de la boutique : une seule ligne (id = 1), modifiable dans l'admin
+model StoreSettings {
+  id                 Int      @id @default(1)
+  email              String
+  phone              String   @default("")
+  city               String
+  instagramUrl       String   @default("")
+  instagramHandle    String   @default("")
+  shippingPriceCents Int
+  pickupEnabled      Boolean  @default(true)
+  taxesEnabled       Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+
+  @@map("store_settings")
+}

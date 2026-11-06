@@ -1,0 +1,217 @@
+/*
+ * Styles globaux et thème de Yat'Print (Tailwind CSS v4).
+ *
+ * Palette : la base crème + encre noire reprend l'identité de la marque
+ * (logo et publications Instagram). Les touches cyan, magenta et jaune
+ * rappellent les encres d'imprimante (CMJN) et rendent le site vivant.
+ *
+ * Chaque variable --color-xxx crée automatiquement des classes Tailwind :
+ *   --color-magenta  ->  bg-magenta, text-magenta, border-magenta, etc.
+ */
+@import "tailwindcss";
+
+@theme {
+  /* ---------- Couleurs de la marque ---------- */
+  --color-cream: #f6f1e9; /* fond principal (comme les posts Instagram) */
+  --color-cream-dark: #ece3d4; /* fond des sections alternées */
+  --color-paper: #fffdf8; /* fond des cartes */
+  --color-ink: #141414; /* texte et boutons principaux */
+  --color-ink-soft: #2b2926;
+  --color-muted: #6b645b; /* texte secondaire */
+  --color-line: #e2d8c8; /* bordures discrètes */
+
+  /* ---------- Touches CMJN ---------- */
+  --color-cyan: #00a3e0;
+  --color-cyan-soft: #d8f1fb;
+  --color-cyan-dark: #00729e;
+  --color-magenta: #e6007e;
+  --color-magenta-soft: #fde0ef;
+  --color-magenta-dark: #b30062;
+  --color-yellow: #ffc21a;
+  --color-yellow-soft: #fff2c9;
+
+  /* ---------- États (succès, erreur) ---------- */
+  --color-success: #1f8a4c;
+  --color-success-soft: #dcf3e5;
+  --color-danger: #c8102e;
+  --color-danger-soft: #fde2e6;
+
+  /* ---------- Polices (chargées dans src/app/layout.jsx) ---------- */
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-script: "Caveat", "Comic Sans MS", cursive;
+
+  /* ---------- Ombres « imprimées » : décalées et sans flou ---------- */
+  --shadow-hard-sm: 2px 2px 0 0 var(--color-ink);
+  --shadow-hard: 4px 4px 0 0 var(--color-ink);
+  --shadow-hard-lg: 8px 8px 0 0 var(--color-ink);
+  --shadow-soft: 0 18px 40px -18px rgb(20 20 20 / 0.35);
+
+  /* ---------- Animations réutilisables (classes animate-xxx) ---------- */
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 9s ease-in-out infinite;
+  --animate-spin-slow: spin 20s linear infinite;
+  --animate-wiggle: wiggle 2.6s ease-in-out infinite;
+
+  /* Défilement horizontal infini (le contenu est doublé, on recule de 50 %) */
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* Flottement doux de haut en bas */
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-14px);
+    }
+  }
+
+  /* Petit balancement (autocollants, badges) */
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(-4deg);
+    }
+    50% {
+      transform: rotate(4deg);
+    }
+  }
+}
+
+/* ---------- Animations d'ouverture des panneaux (tiroir, fenêtre) ---------- */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Barre de progression du carrousel de l'accueil */
+@keyframes hero-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* « scale » seul : la fenêtre est déjà centrée par la propriété CSS « translate » de Tailwind */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* ---------- Styles de base ---------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Texte sélectionné : surligné en jaune, comme au marqueur */
+  ::selection {
+    background-color: var(--color-yellow);
+    color: var(--color-ink);
+  }
+
+  /* Contour bien visible pour la navigation au clavier (accessibilité) */
+  :focus-visible {
+    outline: 3px solid var(--color-cyan);
+    outline-offset: 2px;
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+}
+
+/* ---------- Petits utilitaires maison ---------- */
+
+/* Surlignage jaune façon marqueur, sous un mot important */
+@utility marker {
+  background-image: linear-gradient(
+    transparent 58%,
+    var(--color-yellow) 58%,
+    var(--color-yellow) 90%,
+    transparent 90%
+  );
+  padding-inline: 0.1em;
+}
+
+/* Effet « impression décalée » : ombres cyan et magenta autour du texte */
+@utility text-misprint {
+  text-shadow:
+    3px 3px 0 var(--color-cyan),
+    -2px -2px 0 var(--color-magenta);
+}
+
+/* Cache la barre de défilement (bandes de filtres sur mobile) */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ---------- Accessibilité : moins d'animations si l'utilisateur le demande ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
