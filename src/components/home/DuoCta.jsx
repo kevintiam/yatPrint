@@ -3,7 +3,7 @@
  * Entreprises (magenta) et Mentorat (cyan).
  */
 import Link from "next/link";
-import { ArrowRight, Briefcase, GraduationCap } from "lucide-react";
+import { Briefcase, GraduationCap } from "lucide-react";
 import { Reveal } from "@/components/motion/Reveal";
 import { Button } from "@/components/ui/button";
 

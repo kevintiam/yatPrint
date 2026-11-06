@@ -14,7 +14,7 @@ import { notifyContactReceived } from "@/lib/services/notifications";
 
 export async function POST(request) {
   try {
-    enforceRateLimit(request, "contact", RATE_LIMITS.form);
+    await enforceRateLimit(request, "contact", RATE_LIMITS.form);
     const body = await readJsonBody(request);
 
     if (isSpamSubmission(body)) {

@@ -4,7 +4,6 @@
  */
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Reveal";
 import { SectionHeading } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";

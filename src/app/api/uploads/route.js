@@ -13,10 +13,12 @@ import { enforceRateLimit, RATE_LIMITS } from "@/lib/server/rateLimit";
 import { getFileError } from "@/lib/validation/upload";
 import { saveUploadedFile } from "@/lib/services/storage";
 import { DESIGN_UPLOAD_RULES } from "@/config/catalog";
+import { hasValidSignature } from "@/lib/server/fileSignature";
+
 
 export async function POST(request) {
   try {
-    enforceRateLimit(request, "uploads", RATE_LIMITS.upload);
+    await enforceRateLimit(request, "uploads", RATE_LIMITS.upload);
 
     const formData = await request.formData();
     const file = formData.get("file");
@@ -25,6 +27,10 @@ export async function POST(request) {
     const fileError = getFileError(file, DESIGN_UPLOAD_RULES);
     if (fileError) {
       throw new ApiError(400, fileError);
+    }
+        // Le type annoncé peut être faux : on vérifie le contenu réel
+    if (!(await hasValidSignature(file))) {
+      throw new ApiError(400, "Le contenu du fichier ne correspond pas à son format.");
     }
 
     const record = await saveUploadedFile(file, { purpose: "design", isPublic: false });

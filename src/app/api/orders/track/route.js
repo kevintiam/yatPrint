@@ -42,7 +42,7 @@ function toPublicOrder(order) {
 
 export async function POST(request) {
   try {
-    enforceRateLimit(request, "tracking", RATE_LIMITS.tracking);
+   await enforceRateLimit(request, "tracking", RATE_LIMITS.tracking);
 
     const body = await readJsonBody(request);
     const { orderNumber, email } = validateOrThrow(orderTrackingSchema, body);

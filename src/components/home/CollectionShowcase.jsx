@@ -10,7 +10,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight } from "lucide-react";
 import { ProductCard } from "@/components/products/ProductCard";
 import { SectionHeading } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";

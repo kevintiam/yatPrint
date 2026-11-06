@@ -14,7 +14,7 @@ import { notifyQuoteReceived } from "@/lib/services/notifications";
 
 export async function POST(request) {
   try {
-    enforceRateLimit(request, "quotes", RATE_LIMITS.form);
+    await enforceRateLimit(request, "quotes", RATE_LIMITS.form);
     const body = await readJsonBody(request);
 
     // Robot détecté : on fait semblant que tout va bien, sans rien enregistrer

@@ -13,7 +13,7 @@ import { createCheckout } from "@/lib/services/checkout";
 
 export async function POST(request) {
   try {
-    enforceRateLimit(request, "checkout", RATE_LIMITS.checkout);
+    await enforceRateLimit(request, "checkout", RATE_LIMITS.checkout);
 
     const body = await readJsonBody(request);
     const checkoutData = validateOrThrow(checkoutSchema, body);

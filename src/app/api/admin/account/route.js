@@ -32,7 +32,7 @@ export async function GET() {
 export async function PATCH(request) {
   try {
     const sessionUser = await requireAdmin();
-    enforceRateLimit(request, "admin-password", RATE_LIMITS.password);
+    await enforceRateLimit(request, "admin-password", RATE_LIMITS.password);
     const data = validateOrThrow(accountSchema, await readJsonBody(request));
 
     // 1. Vérifie le mot de passe actuel

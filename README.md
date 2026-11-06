@@ -4,7 +4,7 @@ Site de **Yat'Print** : personnalisation de vêtements et d'objets, collection m
 commandes d'entreprise et mentorat Canva et impression. Version 1, **en français**.
 
 **Stack** : Next.js 16 (App Router) en JavaScript · Tailwind CSS v4 + composants style shadcn/ui ·
-**PostgreSQL (Neon) + Prisma 7** · Auth.js (connexion admin) · Stripe Checkout · Resend (courriels) ·
+**PostgreSQL (Neon) + Prisma 7** · Auth.js (connexion admin) · Stripe Checkout · Gmail ou Resend (courriels) ·
 Zod (validation) · Axios dans les hooks · Motion (animations) · Vitest (tests).
 
 ---
@@ -96,10 +96,22 @@ sans paiement, avec la mention « mode démo ». Ce mode est **bloqué en produc
 Même sans webhook, la page de remerciement vérifie le paiement auprès de Stripe.
 
 ## Courriels
-Sans `RESEND_API_KEY`, les courriels **s'affichent dans le terminal** (pratique pour tester).
-Avec une clé [Resend](https://resend.com), ils sont envoyés depuis `EMAIL_FROM`
-(domaine à vérifier dans Resend). Le bas de chaque courriel reprend les coordonnées
-des **Réglages** de l'admin.
+Le mode d'envoi est choisi automatiquement selon le `.env`, dans cet ordre :
+
+1. **Gmail** (le plus simple) — si `GMAIL_USER` et `GMAIL_APP_PASSWORD` sont remplis.
+   Les courriels partent du compte Gmail de la boutique, sans nom de domaine à vérifier.
+   `GMAIL_APP_PASSWORD` est un **mot de passe d'application** (16 caractères), pas le mot de
+   passe du compte : activez la [validation en deux étapes](https://myaccount.google.com/security),
+   puis créez-le sur [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+2. **[Resend](https://resend.com)** — si `RESEND_API_KEY` est rempli (et Gmail non configuré).
+   Les courriels sont envoyés depuis `EMAIL_FROM` (domaine à vérifier dans Resend).
+3. **Aucun des deux** — les courriels **s'affichent dans le terminal** (pratique pour tester).
+
+Les alertes de l'admin sont envoyées à `ADMIN_NOTIFICATION_EMAIL` (ou, à défaut, `ADMIN_EMAIL`).
+Le bas de chaque courriel reprend les coordonnées des **Réglages** de l'admin.
+
+> En production (Vercel), ajoutez ces mêmes variables dans les réglages du projet :
+> sans elles, aucun courriel ne part et rien ne le signale à l'écran.
 
 ---
 

@@ -11,6 +11,8 @@ import { requireAdmin } from "@/lib/server/requireAdmin";
 import { getFileError } from "@/lib/validation/upload";
 import { getFileUrl, saveUploadedFile } from "@/lib/services/storage";
 import { IMAGE_UPLOAD_RULES } from "@/config/catalog";
+import { hasValidSignature } from "@/lib/server/fileSignature";
+
 
 export async function POST(request) {
   try {
@@ -28,6 +30,11 @@ export async function POST(request) {
     if (fileError) {
       throw new ApiError(400, fileError);
     }
+        // Le type annoncé peut être faux : on vérifie le contenu réel
+    if (!(await hasValidSignature(file))) {
+      throw new ApiError(400, "Le contenu du fichier ne correspond pas à son format.");
+    }
+
 
     const record = await saveUploadedFile(file, { purpose, isPublic: true });
     return jsonSuccess({ url: getFileUrl(record.id) }, 201);
