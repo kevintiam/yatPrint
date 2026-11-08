@@ -52,10 +52,6 @@ export function SettingsView() {
               serverErrors={accountState.fieldErrors}
             />
           )}
-          <Alert tone="info">
-            Mot de passe oublié ? Un développeur peut en créer un nouveau avec la commande
-            « npm run admin:create ».
-          </Alert>
         </div>
       </div>
     </>

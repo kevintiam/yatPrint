@@ -85,7 +85,7 @@ export function StoreSettingsForm({ initialSettings, onSave, isSaving, serverErr
           <Field label="Ville de l'atelier" htmlFor="city" error={errorOf("city")} required>
             <Input id="city" name="city" value={values.city} onChange={handleChange} invalid={Boolean(errorOf("city"))} />
           </Field>
-          <Field label="Nom Instagram" htmlFor="instagramHandle" error={errorOf("instagramHandle")} hint="Ex. @yatprint.ca">
+          <Field label="Nom Instagram" htmlFor="instagramHandle" error={errorOf("instagramHandle")} hint="Exemple : kevin.ca (sans le @).">
             <Input id="instagramHandle" name="instagramHandle" value={values.instagramHandle} onChange={handleChange} />
           </Field>
           <Field label="Adresse de la page Instagram" htmlFor="instagramUrl" error={errorOf("instagramUrl")} className="sm:col-span-2">
@@ -93,7 +93,7 @@ export function StoreSettingsForm({ initialSettings, onSave, isSaving, serverErr
               id="instagramUrl"
               name="instagramUrl"
               type="url"
-              placeholder="https://www.instagram.com/yatprint.ca/"
+              placeholder="https://www.instagram.com/kevin.ca/"
               value={values.instagramUrl}
               onChange={handleChange}
               invalid={Boolean(errorOf("instagramUrl"))}

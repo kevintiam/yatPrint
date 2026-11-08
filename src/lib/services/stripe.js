@@ -47,7 +47,11 @@ function buildLineItem(name, amountCents, quantity, description) {
   }
   return {
     quantity,
-    price_data: { currency: "cad", unit_amount: amountCents, product_data: productData },
+    price_data: {
+      currency: "cad",
+      unit_amount: amountCents,
+      product_data: productData,
+    },
   };
 }
 
@@ -62,7 +66,12 @@ export async function createStripeCheckoutSession(order) {
 
   for (const item of order.items) {
     lineItems.push(
-      buildLineItem(item.productName, item.unitPriceCents, item.quantity, describeItemOptions(item))
+      buildLineItem(
+        item.productName,
+        item.unitPriceCents,
+        item.quantity,
+        describeItemOptions(item),
+      ),
     );
   }
   if (order.shippingCents > 0) {
@@ -106,5 +115,9 @@ export async function retrieveStripeSession(sessionId) {
  * @throws si la signature est invalide
  */
 export function constructStripeEvent(rawBody, signature) {
-  return getStripe().webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
+  return getStripe().webhooks.constructEvent(
+    rawBody,
+    signature,
+    process.env.STRIPE_WEBHOOK_SECRET,
+  );
 }
